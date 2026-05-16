@@ -1,4 +1,4 @@
-# Model Startup Success
+# Model AI App Business
 
 ## Description
 Ce projet contient des pipelines de Machine Learning conçus pour analyser et prédire le succès des startups.
