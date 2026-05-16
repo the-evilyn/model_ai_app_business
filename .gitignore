@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.streamlit/
+.venv/
+venv/
+env/
+.DS_Store
+
+# Too large for normal GitHub pushes. Regenerate with the startup notebook or store with Git LFS.
+artifacts/startup_success_binary_best_model.joblib
+
+# Fichiers ignores
+AI_PROJECT_REPORT_FR.md
+streamlit_app.py
+data/

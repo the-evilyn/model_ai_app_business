@@ -1,0 +1,20 @@
+{
+  "module": "MarketAnalysisScoreEngine",
+  "version": "0.1.0",
+  "score_range": [0, 100],
+  "weights": {
+    "market_size": 0.25,
+    "growth_rate": 0.25,
+    "competition": 0.2,
+    "traction": 0.15,
+    "trend": 0.1,
+    "geographic_fit": 0.05
+  },
+  "labels": [
+    "Weak market opportunity",
+    "Moderate / needs validation",
+    "Promising market",
+    "Very attractive market"
+  ],
+  "purpose": "Explainable market opportunity scoring for the NexusAI final business validation score."
+}
