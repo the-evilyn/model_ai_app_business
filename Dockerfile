@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["python", "chatbot_api.py"]
+CMD ["uvicorn", "chatbot_api:app", "--host", "0.0.0.0", "--port", "8000"]
