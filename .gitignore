@@ -1,16 +1,36 @@
 __pycache__/
 *.py[cod]
-.ipynb_checkpoints/
-.streamlit/
-.venv/
-venv/
+*.pyo
+*.pyd
+.Python
 env/
+venv/
+.venv/
+ENV/
+.ipynb_checkpoints/
+.env
+.env.*
+!.env.example
+*.log
+logs/
+.cache/
+.pytest_cache/
+.mypy_cache/
 .DS_Store
+Thumbs.db
+*.sqlite3
+*.db
+*.tmp
+*.bak
 
-# Too large for normal GitHub pushes. Regenerate with the startup notebook or store with Git LFS.
+# Large datasets
+data/raw/
+data/*.zip
+data/*.parquet
+
+# Optional local demo apps
+demo/
+experiments/
+
+# Large model artifacts
 artifacts/startup_success_binary_best_model.joblib
-
-# Fichiers ignores
-AI_PROJECT_REPORT_FR.md
-streamlit_app.py
-data/

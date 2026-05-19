@@ -1,0 +1,100 @@
+{
+  "string": {
+    "id": "string",
+    "projectId": null,
+    "title": "New Chat",
+    "chatType": "business_advisor",
+    "contextType": "project_validation",
+    "createdAt": "2026-05-18T22:48:04.094615+00:00",
+    "messages": [
+      {
+        "id": "410e195a-81dd-42a8-9051-b3d3210ebd62",
+        "chatId": "string",
+        "role": "user",
+        "content": "string",
+        "timestamp": "2026-05-18T22:48:04.100187+00:00",
+        "senderType": "user",
+        "intent": "general_question"
+      },
+      {
+        "id": "9ca45049-8a9b-43fa-8300-228719e1e555",
+        "chatId": "string",
+        "role": "assistant",
+        "content": "**Summary**  \nI’m ready to help you, but I need a bit more information about what you’d like to discuss.\n\n**Analysis**  \nYour last message only contained the word “string,” which doesn’t give me any context or data to work with (no API results, no project details, no market information, etc.).\n\n**Recommendations**  \nPlease let me know what you’d like assistance with, such as:\n\n- Validating a startup idea (provide a brief description, target market, and any existing data you have).  \n- Understanding a specific metric or score (share the metric name and its value).  \n- Conducting a market or sentiment analysis (specify the industry, region, or product).  \n- Getting strategic advice or next‑step recommendations for your venture.\n\n**Limitations**  \nWithout additional details, I can’t generate any analysis, scores, or recommendations. The more information you provide, the more precise and actionable my response can be.",
+        "timestamp": "2026-05-18T22:48:04.104766+00:00",
+        "senderType": "ai",
+        "intent": "general_question",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "The user just wrote \"string\". Likely they typed a placeholder or test. There's no context or data. According to rules: need to respond, maybe ask for clarification. Should respond in same language as user (English). Provide a helpful response: ask what they need.",
+            "format": "unknown",
+            "index": 0
+          }
+        ]
+      },
+      {
+        "id": "61e48bc2-dabb-40cd-a36b-3c1bd778e74b",
+        "chatId": "string",
+        "role": "user",
+        "content": "string",
+        "timestamp": "2026-05-18T23:19:48.547149+00:00",
+        "senderType": "user",
+        "intent": "general_question"
+      },
+      {
+        "id": "4b406010-dbdb-42e9-9ac2-9e98128cafb0",
+        "chatId": "string",
+        "role": "assistant",
+        "content": "**Summary**  \nI’m ready to help you evaluate and validate your startup idea, but I need a bit more information about what you’d like to explore.\n\n**Analysis**  \nYour last message only contains the word “string,” which doesn’t give me any context about your project, market, or the specific assistance you’re seeking.\n\n**Recommendations**  \nPlease provide some details so I can give you a useful analysis, such as:\n\n1. **Project description** – What product or service are you planning to launch?  \n2. **Target market** – Who are your ideal customers and where are they located?  \n3. **Current stage** – Idea, prototype, beta, or already generating revenue?  \n4. **Specific questions** – Do you need a market‑size estimate, a success‑score assessment, competitor analysis, or something else?\n\nFeel free to share any data you already have (e.g., market research, financial projections, user feedback). The more detail you give, the more precise and actionable my advice will be.\n\n**Limitations**  \nWithout additional information I cannot generate any scores, sentiment analysis, or validation results. Once you provide the missing inputs, I’ll be able to apply the NexusAI modules and give you a complete, data‑driven response.",
+        "timestamp": "2026-05-18T23:19:48.552684+00:00",
+        "senderType": "ai",
+        "intent": "general_question",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "The user just wrote \"string\". Likely they expect some response? Possibly they typed something incorrectly. We need to respond appropriately: clarify what they need. According to rules, we must be constructive, ask for clarification. Use same language as user: English. Provide brief helpful response asking for more detail.",
+            "format": "unknown",
+            "index": 0
+          }
+        ]
+      }
+    ]
+  },
+  "test_chat_001": {
+    "id": "test_chat_001",
+    "projectId": null,
+    "title": "New Chat",
+    "chatType": "business_advisor",
+    "contextType": "project_validation",
+    "createdAt": "2026-05-19T00:00:15.118695+00:00",
+    "messages": [
+      {
+        "id": "57b0b511-08a4-4275-8114-8aa7a4231ac4",
+        "chatId": "test_chat_001",
+        "role": "user",
+        "content": "Bonjour, explique-moi simplement ce que fait cette plateforme.",
+        "timestamp": "2026-05-19T00:00:15.128517+00:00",
+        "senderType": "user",
+        "intent": "general_question"
+      },
+      {
+        "id": "5302c461-dd32-4d7f-86d0-a8d4174b07b6",
+        "chatId": "test_chat_001",
+        "role": "assistant",
+        "content": "**Résumé**  \nNexusAI est une plateforme d’intelligence artificielle qui aide les entrepreneurs à valider et à analyser leurs projets de startup.  \n\n**Analyse**  \n- Centralise les données de marché, les scores de succès, les avis clients et les recommandations d’experts.  \n- Utilise des modules IA (analyse de sentiment, scoring, veille concurrentielle) pour fournir des diagnostics rapides.  \n- Présente les résultats sous forme de tableaux de bord interactifs et de rapports actionnables.  \n\n**Recommandations**  \n- Créez un compte et importez votre idée ou votre business plan.  \n- Laissez la plateforme générer le score de validation et le tableau de bord.  \n- Suivez les suggestions d’étapes concrètes (étude de marché, MVP, levée de fonds).  \n\n**Limites**  \n- La précision dépend de la qualité des informations que vous fournissez.  \n- Aucun résultat n’est disponible tant que vous n’avez pas chargé de données.  \n\n**Prochaine étape**  \nInscrivez‑vous, remplissez le formulaire de projet, et commencez à recevoir vos premiers insights.",
+        "timestamp": "2026-05-19T00:00:15.134978+00:00",
+        "senderType": "ai",
+        "intent": "general_question",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "The user asks in French: \"Explain simply what this platform does.\" Need to respond in French. Use the response structure: Summary, Analysis, Recommendations, Limitations. No data. So explain platform concept. Keep concise, 5 sections max, 8-12 lines.",
+            "format": "unknown",
+            "index": 0
+          }
+        ]
+      }
+    ]
+  }
+}

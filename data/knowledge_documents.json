@@ -1,0 +1,92 @@
+[
+  {
+    "id": "doc_001",
+    "title": "Business Validation Score — How It Works",
+    "content": "The Business Validation Score is a composite metric that evaluates the overall viability of an entrepreneurial project. It combines four dimensions: Startup Success Score (40%), Market Sentiment Score (25%), Market Analysis Score (20%), and Specialist/Risk Score (15%). The final score ranges from 0 to 100. A score above 75 indicates strong validation, 60-75 is promising but needs further validation, 45-60 is risky and needs more proof, and below 45 is weak validation. The confidence score indicates how reliable the validation is based on data completeness and sector reliability. Weights can be customized but default to the standard distribution. The final score is adjusted by sector reliability — known sectors (AI, SaaS, Fintech, Health, Ecommerce, Climate, Crypto) receive full weight, while unknown sectors receive a reduced weight.",
+    "source_type": "faq",
+    "metadata": {
+      "module": "business_validation"
+    }
+  },
+  {
+    "id": "doc_002",
+    "title": "Startup Success Prediction — Model Explanation",
+    "content": "The Startup Success Prediction model is a supervised machine learning classifier trained on historical startup data. It takes as input: sector, funding rounds, founder experience years, team size, market size (billion $), product traction (users), burn rate (million $/month), revenue (million $), investor type, and founder background. The model outputs a success probability (0-100%) and a prediction label (Success or Failure). Feature engineering includes traction per employee (product_traction_users / team_size) and burn-to-revenue ratio (burn_rate_million / revenue_adjusted). The model supports sectors: AI, Climate, Crypto, Ecommerce, Fintech, Health, and SaaS. For other sectors, a heuristic fallback is used with reduced confidence. The model was trained using XGBoost with hyperparameter tuning. Revenue values entered in millions are internally converted to match the training data scale.",
+    "source_type": "documentation",
+    "metadata": {
+      "module": "startup_success"
+    }
+  },
+  {
+    "id": "doc_003",
+    "title": "Market Analysis Score — Methodology",
+    "content": "The Market Analysis Score evaluates market potential using a data-driven scoring system. It is NOT a machine learning model. Data sources include: World Bank Indicators API (GDP growth, internet penetration, ease of doing business), Google Trends CSV (optional search trend data), and project inputs (market size, growth rate, competition level, traction). Sub-scores include: market size score (35% weight), market growth score (30% weight), competition score (20% weight), and traction score (15% weight). The final market score is a weighted average of all sub-scores, ranging from 0 to 100. The system can automatically collect macroeconomic indicators from the World Bank API for the specified country. Competition levels are mapped as: low=85, medium=60, high=35. The search trend score from Google Trends provides additional signal about market interest.",
+    "source_type": "documentation",
+    "metadata": {
+      "module": "market_analysis"
+    }
+  },
+  {
+    "id": "doc_004",
+    "title": "Sentiment Analysis — How Customer Opinions Are Analyzed",
+    "content": "The Sentiment Analysis module uses a trained NLP pipeline to analyze customer reviews and opinions. Each text receives a sentiment score (0-100) and a label (positive if score >= 50, negative otherwise). The system calculates an average sentiment score across all provided texts and an overall sentiment label. When the trained model is unavailable, a keyword-based fallback is used. Positive keywords include: love, good, great, excellent, amazing, useful, demand, growing, positive, recommend, like, best, fast, easy, valuable. Negative keywords include: bad, poor, expensive, complain, hate, slow, uncertain, problem, difficult, negative, risk, weak, fail, failure, low. For best results, provide at least 3-5 customer opinions or reviews. The model was trained on labeled sentiment data using scikit-learn pipelines with TF-IDF vectorization.",
+    "source_type": "documentation",
+    "metadata": {
+      "module": "sentiment_analysis"
+    }
+  },
+  {
+    "id": "doc_005",
+    "title": "Specialist Recommendation — Matching Algorithm",
+    "content": "The Specialist Recommendation engine matches entrepreneurs with relevant experts using a hybrid scoring system. The matching score is computed from multiple factors: semantic similarity between project description and specialist bio/expertise (using TF-IDF cosine similarity), skills match (overlap between project needs and specialist skills), sector match (bonus for specialists in the same sector), rating (specialist's average rating normalized), availability (available specialists get priority scoring), budget compatibility (hourly rate compared to project budget), language match (preferred language alignment), and location proximity. Results are ranked by the composite recommendation score from 0 to 100. Each specialist recommendation includes a reason explaining why they were matched. In production, specialist profiles come from MongoDB. In demo mode, sample CSV data with pre-defined specialists is used.",
+    "source_type": "documentation",
+    "metadata": {
+      "module": "specialist_recommendation"
+    }
+  },
+  {
+    "id": "doc_006",
+    "title": "Platform FAQ — Frequently Asked Questions",
+    "content": "Q: What is NexusAI? A: NexusAI is an intelligent platform for analyzing and validating entrepreneurial projects using AI, market data, and sentiment analysis. It helps entrepreneurs make data-driven decisions about their business ideas.\n\nQ: How accurate is the prediction? A: The prediction is based on historical startup data and should be used as guidance, not as a definitive answer. The confidence score indicates how reliable the analysis is based on data completeness.\n\nQ: What data do I need to provide? A: At minimum, you need: project name, description, and sector. For better results, provide financials (funding rounds, team size, revenue, burn rate), market data (market size, growth rate, competition), and customer opinions.\n\nQ: Can I use it for any sector? A: Yes, but the ML model works best for: AI, SaaS, Fintech, Health, Ecommerce, Climate, and Crypto. Other sectors use a heuristic fallback with lower confidence.\n\nQ: Is my data secure? A: Yes, all data is processed on the server and is not shared with third parties. No data is stored permanently unless you explicitly save it.\n\nQ: What languages does the chatbot support? A: The chatbot supports English and French. It responds in the same language as your question.\n\nQ: How does the chatbot work? A: The chatbot detects your intent from your message, calls the appropriate AI services (startup prediction, market analysis, sentiment analysis, specialist recommendation), retrieves relevant knowledge from internal documents, and generates a comprehensive response using an external LLM or structured templates.",
+    "source_type": "faq",
+    "metadata": {
+      "module": "general"
+    }
+  },
+  {
+    "id": "doc_007",
+    "title": "Help Center — Getting Started Guide",
+    "content": "Welcome to NexusAI! Here's how to get started with the platform:\n\n1. Create a project: Enter your project name, description, and sector. This is the foundation for all analyses.\n\n2. Fill in project details: Add financial data (funding rounds, revenue, burn rate), team information (team size, founder experience), and market data (market size, growth rate, competition level).\n\n3. Run analyses: Use individual modules — predict startup success, analyze market potential, evaluate customer sentiment, or find specialist consultants.\n\n4. Get business validation: The Business Validation Score combines all analyses into a single comprehensive score with confidence level.\n\n5. Chat with the AI advisor: Use the chatbot to ask questions, get personalized recommendations, generate business plans, and create marketing strategies.\n\n6. Generate reports: Export your analysis results as structured reports for stakeholders.\n\nTips for best results:\n- Provide as much data as possible for more accurate results.\n- Include at least 3-5 customer opinions for better sentiment analysis.\n- Specify your country for relevant macroeconomic data from World Bank.\n- Use the chatbot to explore different aspects of your analysis.\n- Compare results across different scenarios by adjusting inputs.",
+    "source_type": "help_center",
+    "metadata": {
+      "module": "general"
+    }
+  },
+  {
+    "id": "doc_008",
+    "title": "Understanding Confidence Scores",
+    "content": "The confidence score (0-100%) indicates how reliable the business validation result is. It is calculated from three factors: sector reliability (known sectors like AI, SaaS, Fintech score higher at 1.0, while unknown sectors score 0.55), number of opinions provided (more customer opinions increase confidence, up to 5 opinions for maximum contribution), and structured data completeness (more filled data fields like revenue, team size, market size increase confidence). A confidence score above 80% means the analysis is highly reliable and based on comprehensive data. Between 60-80% means moderately reliable with some data gaps. Below 60% means the analysis should be interpreted with caution due to missing data or unknown sector. To improve your confidence score: use a well-known sector, provide at least 5 customer opinions, and fill in all project data fields including country, competition level, market growth rate, and investor type.",
+    "source_type": "documentation",
+    "metadata": {
+      "module": "business_validation"
+    }
+  },
+  {
+    "id": "doc_009",
+    "title": "Sector Support and Mapping",
+    "content": "The platform supports all sectors, but ML model accuracy varies by sector. Fully supported sectors with trained model data: AI, SaaS, Fintech, Health, Ecommerce, Climate, Crypto. These receive a sector reliability of 1.0. Keyword-mapped sectors are detected from project description: 'software' or 'cloud' maps to SaaS, 'machine learning' or 'automation' maps to AI, 'banking' or 'payment' maps to Fintech, 'medical' or 'wellness' maps to Health, 'retail' or 'marketplace' maps to Ecommerce, 'solar' or 'sustainability' maps to Climate, 'blockchain' or 'web3' maps to Crypto. These receive a reliability of 0.85. Other sectors like Real Estate, Education, Agriculture, Food, Transport receive a reliability of 0.55-0.65 and use heuristic scoring instead of the trained ML model. The system checks both the sector field and the project description for keyword matching.",
+    "source_type": "documentation",
+    "metadata": {
+      "module": "startup_success"
+    }
+  },
+  {
+    "id": "doc_010",
+    "title": "API Integration Guide",
+    "content": "The NexusAI API provides the following REST endpoints for integration with Spring Boot, Angular, or any HTTP client:\n\nGET /health — Check API health status and version.\nGET /api/v1/models/status — Check which ML models are loaded and their status.\nPOST /api/v1/startup-success/predict — Predict startup success probability. Input: sector, funding_rounds, founder_experience_years, team_size, market_size_billion, product_traction_users, burn_rate_million, revenue_million, investor_type, founder_background.\nPOST /api/v1/sentiment/analyze — Analyze text sentiment. Input: texts (list of strings).\nPOST /api/v1/market-analysis/score — Score market potential. Input: sector, country, market_size_billion, market_growth_rate_percent, competition_level, use_world_bank.\nPOST /api/v1/specialists/recommend — Get specialist recommendations. Input: title, description, sector, needs, budget_per_hour.\nPOST /api/v1/business-validation/score — Get comprehensive business validation. Input: all project data fields.\n\nThe main API runs on port 8001. The chatbot API runs on port 8002. Both support CORS for cross-origin requests. All endpoints accept and return JSON.",
+    "source_type": "documentation",
+    "metadata": {
+      "module": "api"
+    }
+  }
+]
