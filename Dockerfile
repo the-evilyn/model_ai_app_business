@@ -8,6 +8,6 @@ RUN pip install -r requirements.txt --no-cache-dir
 
 COPY . .
 
-EXPOSE 5000
+EXPOSE 8501
 
-CMD ["python", "app.py"]
+CMD ["streamlit", "run", "streamlit_api_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
