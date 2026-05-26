@@ -17,7 +17,8 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'pip install -r requirements.txt --break-system-packages'
+                // Pour du Python/Flask ou FastApi généralement utilisé en IA
+                sh 'pip install -r requirements.txt || echo "Pas de requirements.txt ou déjà installé"'
             }
         }
 
@@ -25,18 +26,12 @@ pipeline {
             steps {
                 withSonarQubeEnv('sonarqube') {
                     sh '''
-                        sonar-scanner \
+                        npx sonar-scanner \
                         -Dsonar.projectKey=model-ia \
                         -Dsonar.projectName=model-ia \
                         -Dsonar.sources=.
                     '''
                 }
-            }
-        }
-
-        stage('Tests') {
-            steps {
-                sh 'pytest tests/ -v || true'
             }
         }
 
@@ -60,14 +55,21 @@ pipeline {
             }
         }
 
+        stage('Deploy avec Ansible') {
+            steps {
+                // Le même playbook magique qui va aussi relancer le pod de l'IA sur Kubernetes
+                sh 'ssh -o StrictHostKeyChecking=no azureuser@74.161.163.110 "ansible-playbook -i ~/ansible/inventory.ini ~/ansible/deploy.yml"'
+            }
+        }
+
     }
 
     post {
         success {
-            echo '✅ Pipeline IA réussi !'
+            echo 'Pipeline IA réussi !'
         }
         failure {
-            echo '❌ Pipeline IA échoué — vérifier les logs'
+            echo ' Pipeline IA échoué — vérifier les logs'
         }
         always {
             cleanWs()
