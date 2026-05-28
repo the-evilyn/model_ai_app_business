@@ -9,7 +9,6 @@ pipeline {
 
     stages {
 
-<<<<<<< HEAD
         stage('1. Checkout') {
             steps {
                 checkout scm
@@ -53,6 +52,7 @@ pipeline {
                 sh 'ssh -o StrictHostKeyChecking=no azureuser@74.161.163.110 "ansible-playbook -i ~/ansible/inventory.ini ~/ansible/deploy.yml"'
             }
         }
+
     }
 
     post {
@@ -60,11 +60,7 @@ pipeline {
             echo 'Pipeline IA réussi !'
         }
         failure {
-<<<<<<< HEAD
             echo 'Pipeline IA échoué — vérifier les logs'
-=======
-            echo ' Pipeline IA échoué — vérifier les logs'
->>>>>>> 2790216abe0bad5bad11f0969fe9d430f84c522f
         }
         always {
             cleanWs()
