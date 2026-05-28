@@ -1,4 +1,3 @@
-# Image Python
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -8,6 +7,6 @@ RUN pip install -r requirements.txt --no-cache-dir
 
 COPY . .
 
-EXPOSE 5000
+EXPOSE 8000
 
-CMD ["python", "app.py"]
+CMD ["uvicorn", "chatbot_api:app", "--host", "0.0.0.0", "--port", "8000"]
