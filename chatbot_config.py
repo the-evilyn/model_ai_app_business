@@ -23,7 +23,7 @@ except ImportError:
 
 # ─────────────────────────────── API URLs ────────────────────────────────── #
 
-FASTAPI_BASE_URL: str = os.getenv("FASTAPI_BASE_URL", "http://127.0.0.1:8001")
+FASTAPI_BASE_URL: str = os.getenv("FASTAPI_BASE_URL", "http://127.0.0.1:8000")
 CHATBOT_API_PORT: int = int(os.getenv("CHATBOT_API_PORT", "8002"))
 
 # ──────────────────────────── LLM Provider ───────────────────────────────── #

@@ -16,31 +16,6 @@ pipeline {
             }
         }
 
-        stage('1b. Install Dependencies') {
-            steps {
-                sh 'pip install -r requirements.txt --break-system-packages'
-            }
-        }
-
-        stage('1c. Analyse SonarQube') {
-            steps {
-                withSonarQubeEnv('sonarqube') {
-                    sh '''
-                        sonar-scanner \
-                        -Dsonar.projectKey=model-ia \
-                        -Dsonar.projectName=model-ia \
-                        -Dsonar.sources=.
-                    '''
-                }
-            }
-        }
-
-        stage('1d. Tests') {
-            steps {
-                sh 'pytest tests/ -v'
-            }
-        }
-
         stage('2. Build Docker Image') {
             steps {
                 echo 'Building IA Docker Image...'

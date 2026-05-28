@@ -13,10 +13,9 @@ except Exception:
 
 
 DEFAULT_WEIGHTS = {
-    "startup_success": 0.40,
+    "startup_success": 0.45,
     "market_sentiment": 0.25,
-    "market_analysis": 0.20,
-    "specialist_or_risk": 0.15,
+    "market_analysis": 0.30,
 }
 
 STARTUP_MODEL_SECTORS = {
@@ -219,13 +218,10 @@ class BusinessValidationScoreEngine:
         startup_score = self.startup_success_score(request, sector_info["startup_model_sector"])
         sentiment_score = self.market_sentiment_score(request.opinions or [request.project_description])
         market_score = self.market_analysis_score(request)
-        specialist_score = self.specialist_or_risk_score(request)
-
         raw_final = (
             self.weights["startup_success"] * startup_score
             + self.weights["market_sentiment"] * sentiment_score
             + self.weights["market_analysis"] * market_score
-            + self.weights["specialist_or_risk"] * specialist_score
         )
 
         confidence = self._bounded(
@@ -248,7 +244,7 @@ class BusinessValidationScoreEngine:
             startup_success_score=round(startup_score, 2),
             market_sentiment_score=round(sentiment_score, 2),
             market_analysis_score=round(market_score, 2),
-            specialist_or_risk_score=round(specialist_score, 2),
+            specialist_or_risk_score=0.0,
             original_sector=request.sector,
             normalized_sector=sector_info["normalized_sector"],
             startup_model_sector=sector_info["startup_model_sector"],

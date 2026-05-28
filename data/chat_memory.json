@@ -96,5 +96,107 @@
         ]
       }
     ]
+  },
+  "665000000000000000000004": {
+    "id": "665000000000000000000004",
+    "projectId": null,
+    "title": "New Chat",
+    "chatType": "business_advisor",
+    "contextType": "project_validation",
+    "createdAt": "2026-05-26T13:24:29.538033+00:00",
+    "messages": [
+      {
+        "id": "a5e7471f-7916-4e0f-b3db-0bd2304baeca",
+        "chatId": "665000000000000000000004",
+        "role": "user",
+        "content": "Analyse mon projet SmartRetail AI",
+        "timestamp": "2026-05-26T13:24:29.545137+00:00",
+        "senderType": "user",
+        "intent": "general_question"
+      },
+      {
+        "id": "4fb32567-7c5d-481b-950a-b8831dfac6f7",
+        "chatId": "665000000000000000000004",
+        "role": "assistant",
+        "content": "## AI Business Advisor Response (Template Mode)\n**Note:** No LLM API key is configured. This is a structured template response based on the available API results and internal knowledge.\n**Your question:** Analyse mon projet SmartRetail AI\n\n**To get personalised AI-generated answers**, configure an LLM provider in your `.env` file:\n```\nLLM_PROVIDER=openai\nOPENAI_API_KEY=your_key_here\nLLM_MODEL=gpt-4o-mini\n```\nSupported providers: OpenAI, Gemini, Mistral, Claude, OpenRouter.\n",
+        "timestamp": "2026-05-26T13:24:29.549696+00:00",
+        "senderType": "ai",
+        "intent": "general_question"
+      },
+      {
+        "id": "f96f8cf1-7c4b-4495-a0a5-91488b52604e",
+        "chatId": "665000000000000000000004",
+        "role": "user",
+        "content": "Analyse mon projet SmartRetail AI",
+        "timestamp": "2026-05-26T13:30:09.186643+00:00",
+        "senderType": "user",
+        "intent": "general_question"
+      },
+      {
+        "id": "a3d92463-0ecc-4f02-a7e4-0d38ece4df2c",
+        "chatId": "665000000000000000000004",
+        "role": "assistant",
+        "content": "## AI Business Advisor Response (Template Mode)\n**Note:** No LLM API key is configured. This is a structured template response based on the available API results and internal knowledge.\n**Your question:** Analyse mon projet SmartRetail AI\n\n**To get personalised AI-generated answers**, configure an LLM provider in your `.env` file:\n```\nLLM_PROVIDER=openai\nOPENAI_API_KEY=your_key_here\nLLM_MODEL=gpt-4o-mini\n```\nSupported providers: OpenAI, Gemini, Mistral, Claude, OpenRouter.\n",
+        "timestamp": "2026-05-26T13:30:09.192458+00:00",
+        "senderType": "ai",
+        "intent": "general_question"
+      }
+    ]
+  },
+  "6a1607f5b089bf8df937f0ae": {
+    "id": "6a1607f5b089bf8df937f0ae",
+    "projectId": null,
+    "title": "New Chat",
+    "chatType": "business_advisor",
+    "contextType": "project_validation",
+    "createdAt": "2026-05-26T20:52:22.682877+00:00",
+    "messages": [
+      {
+        "id": "35ec6ae6-e915-414e-bf82-17320e315d9a",
+        "chatId": "6a1607f5b089bf8df937f0ae",
+        "role": "user",
+        "content": "hi",
+        "timestamp": "2026-05-26T20:52:22.687828+00:00",
+        "senderType": "user",
+        "intent": "general_question"
+      },
+      {
+        "id": "4113c336-4049-498a-b16e-65ac9fbc917d",
+        "chatId": "6a1607f5b089bf8df937f0ae",
+        "role": "assistant",
+        "content": "## AI Business Advisor Response (Template Mode)\n**Note:** No LLM API key is configured. This is a structured template response based on the available API results and internal knowledge.\n**Your question:** hi\n\n**To get personalised AI-generated answers**, configure an LLM provider in your `.env` file:\n```\nLLM_PROVIDER=openai\nOPENAI_API_KEY=your_key_here\nLLM_MODEL=gpt-4o-mini\n```\nSupported providers: OpenAI, Gemini, Mistral, Claude, OpenRouter.\n",
+        "timestamp": "2026-05-26T20:52:22.691857+00:00",
+        "senderType": "ai",
+        "intent": "general_question"
+      }
+    ]
+  },
+  "6a161bfcb089bf8df937f0c3": {
+    "id": "6a161bfcb089bf8df937f0c3",
+    "projectId": null,
+    "title": "New Chat",
+    "chatType": "business_advisor",
+    "contextType": "project_validation",
+    "createdAt": "2026-05-26T22:17:43.985258+00:00",
+    "messages": [
+      {
+        "id": "92aaf375-2962-4b34-a484-777c71d3c3e7",
+        "chatId": "6a161bfcb089bf8df937f0c3",
+        "role": "user",
+        "content": "hi",
+        "timestamp": "2026-05-26T22:17:43.996546+00:00",
+        "senderType": "user",
+        "intent": "general_question"
+      },
+      {
+        "id": "623fa007-f0d0-400a-ae8b-3d85ad7a19a4",
+        "chatId": "6a161bfcb089bf8df937f0c3",
+        "role": "assistant",
+        "content": "## AI Business Advisor Response (Template Mode)\n**Note:** No LLM API key is configured. This is a structured template response based on the available API results and internal knowledge.\n**Your question:** hi\n\n**To get personalised AI-generated answers**, configure an LLM provider in your `.env` file:\n```\nLLM_PROVIDER=openai\nOPENAI_API_KEY=your_key_here\nLLM_MODEL=gpt-4o-mini\n```\nSupported providers: OpenAI, Gemini, Mistral, Claude, OpenRouter.\n",
+        "timestamp": "2026-05-26T22:17:44.002539+00:00",
+        "senderType": "ai",
+        "intent": "general_question"
+      }
+    ]
   }
 }
