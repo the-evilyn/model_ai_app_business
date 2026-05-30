@@ -7,8 +7,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from business_validation_score_engine import BusinessValidationRequest, BusinessValidationScoreEngine
+from interpretability_engine import StartupInterpretabilityEngine
+from analysis_interpretation_engine import (
+    build_business_interpretation,
+    build_warnings,
+    utc_now_iso,
+)
 from market_analysis_score_engine import MarketAnalysisScoreEngine
 from market_data_collector import MarketDataCollector
+from report_content_engine import generate_report_content
 from specialist_recommendation_engine import SpecialistRecommendationEngine
 
 
@@ -30,6 +37,7 @@ engine = BusinessValidationScoreEngine()
 market_engine = MarketAnalysisScoreEngine()
 market_collector = MarketDataCollector()
 specialist_engine = SpecialistRecommendationEngine()
+interpretability_engine = StartupInterpretabilityEngine(engine)
 
 
 def _model_to_dict(model: BaseModel, *, exclude_none: bool = False) -> dict[str, Any]:
@@ -64,6 +72,10 @@ class BusinessValidationPayload(BaseModel):
     specialist_match_score: float | None = Field(default=None, ge=0, le=100)
     risk_score: float | None = Field(default=None, ge=0, le=100)
     opinions: list[str] = Field(default_factory=list)
+    project_stage: str | None = None
+    budget_per_hour: float | None = Field(default=None, ge=0)
+    preferred_language: str | None = None
+    specialists: list["SpecialistPayload"] | None = None
 
 
 class StartupSuccessPayload(BaseModel):
@@ -144,6 +156,18 @@ class SpecialistRecommendationPayload(BaseModel):
     specialists: list[SpecialistPayload] | None = None
 
 
+class ReportContentPayload(BaseModel):
+    projectData: dict[str, Any] = Field(default_factory=dict)
+    analysisResult: dict[str, Any] = Field(default_factory=dict)
+    includeBusinessPlan: bool = True
+
+
+try:
+    BusinessValidationPayload.model_rebuild()
+except AttributeError:
+    BusinessValidationPayload.update_forward_refs()
+
+
 @app.get("/health")
 def health() -> dict[str, Any]:
     return {
@@ -185,11 +209,13 @@ def predict_startup_success(payload: StartupSuccessPayload) -> dict[str, Any]:
     request = BusinessValidationRequest(**payload_dict)
     sector_info = engine.normalize_sector(payload.sector, payload.project_description)
     score = engine.startup_success_score(request, sector_info["startup_model_sector"])
+    explanation = interpretability_engine.explain(request, sector_info["startup_model_sector"])
     return {
         "success_probability": round(score, 2),
         "prediction_label": "Success" if score >= 50 else "Failure",
         "model_loaded": engine.startup_artifact is not None,
         "model_mode": "trained_model" if engine.startup_artifact is not None else "fallback_heuristic",
+        "explanation": explanation,
         "important_note": (
             "Revenue is entered in millions in the app. During inference it is converted "
             "to the same scale used by the training dataset for burn_to_revenue_ratio."
@@ -258,6 +284,131 @@ def score_business(payload: BusinessValidationPayload) -> dict[str, Any]:
     return response
 
 
+@app.post("/api/v1/business-validation/analyze")
+def analyze_business(payload: BusinessValidationPayload) -> dict[str, Any]:
+    payload_dict = _model_to_dict(payload, exclude_none=True)
+    allowed_fields = {item.name for item in fields(BusinessValidationRequest)}
+    request_dict = {key: value for key, value in payload_dict.items() if key in allowed_fields}
+    request = BusinessValidationRequest(**request_dict)
+    sector_info = engine.normalize_sector(payload.sector, payload.project_description)
+
+    startup_score = engine.startup_success_score(request, sector_info["startup_model_sector"])
+    startup_prediction = {
+        "predictionLabel": "Success" if startup_score >= 50 else "Failure",
+        "successProbability": round(startup_score, 2),
+        "modelMode": "trained_model" if engine.startup_artifact is not None else "fallback_heuristic",
+    }
+    shap_explanation = interpretability_engine.explain(request, sector_info["startup_model_sector"])
+
+    market_result = market_engine.analyze(
+        {
+            "sector": payload.sector,
+            "market_size_billion": payload.market_size_billion,
+            "market_growth_rate_percent": payload.market_growth_rate_percent,
+            "competition_level": payload.competition_level,
+            "product_traction_users": payload.product_traction_users,
+            "search_trend_score": payload.search_trend_score,
+            "country": payload.country,
+            "region": payload.region,
+            "notes": payload.project_description,
+        }
+    )
+    market_analysis = {
+        "market_analysis": market_result.__dict__,
+        "features": {
+            "market_size_billion": payload.market_size_billion,
+            "market_growth_rate_percent": payload.market_growth_rate_percent,
+            "competition_level": payload.competition_level,
+            "product_traction_users": payload.product_traction_users,
+            "search_trend_score": payload.search_trend_score,
+            "country": payload.country,
+            "region": payload.region,
+        },
+    }
+
+    feedbacks = [text.strip() for text in payload.opinions if text.strip()]
+    market_opinion = None
+    market_opinion_score = None
+    if feedbacks:
+        sentiment_scores = [engine.market_sentiment_score([text]) for text in feedbacks]
+        market_opinion_score = round(sum(sentiment_scores) / len(sentiment_scores), 2)
+        market_opinion = {
+            "average_sentiment_score": market_opinion_score,
+            "overall_label": "positive" if market_opinion_score >= 50 else "negative",
+            "count": len(feedbacks),
+        }
+
+    validation_result = engine.validate(request)
+    sentiment_for_final = market_opinion_score if market_opinion_score is not None else 50.0
+    raw_final = (
+        engine.weights["startup_success"] * startup_score
+        + engine.weights["market_sentiment"] * sentiment_for_final
+        + engine.weights["market_analysis"] * market_result.market_score
+    )
+    final_score = engine._bounded(raw_final * (0.85 + 0.15 * sector_info["sector_reliability"]))
+    scores = {
+        "finalScore": round(final_score, 2),
+        "startupSuccessScore": round(startup_score, 2),
+        "marketAnalysisScore": round(market_result.market_score, 2),
+        "marketOpinionScore": market_opinion_score,
+    }
+
+    interpretation = build_business_interpretation(
+        payload_dict,
+        scores,
+        startup_prediction,
+        shap_explanation,
+        market_analysis,
+        market_opinion,
+    )
+    warnings = build_warnings(
+        feedback_count=len(feedbacks),
+        startup_model_mode=startup_prediction["modelMode"],
+        market_analysis=market_analysis,
+        confidence_score=validation_result.confidence_score,
+    )
+    warnings.extend(item for item in validation_result.warnings if item not in warnings)
+
+    specialists = None
+    if payload.specialists is not None:
+        specialists = [_model_to_dict(item, exclude_none=True) for item in payload.specialists]
+    recommendations = specialist_engine.recommend(
+        {
+            "project_id": None,
+            "title": payload.project_name,
+            "description": payload.project_description,
+            "sector": payload.sector,
+            "needs": interpretation["generatedNeeds"],
+            "project_stage": payload.project_stage,
+            "budget_per_hour": payload.budget_per_hour,
+            "preferred_language": payload.preferred_language,
+            "location": payload.country,
+            "top_k": 5,
+        },
+        specialists=specialists,
+    )
+
+    return {
+        "scores": scores,
+        "startupPrediction": startup_prediction,
+        "shapExplanation": {
+            "positiveFactors": shap_explanation.get("positiveFactors", []),
+            "negativeFactors": shap_explanation.get("negativeFactors", []),
+            "method": shap_explanation.get("method"),
+            "fallback": shap_explanation.get("fallback", False),
+        },
+        "strengths": interpretation["strengths"],
+        "weaknesses": interpretation["weaknesses"],
+        "recommendations": interpretation["recommendations"],
+        "warnings": warnings,
+        "generatedNeeds": interpretation["generatedNeeds"],
+        "recommendedSpecialists": [item.__dict__ for item in recommendations],
+        "interpretation": interpretation["interpretation"],
+        "interpretationSource": interpretation["interpretationSource"],
+        "createdAt": utc_now_iso(),
+    }
+
+
 @app.post("/api/v1/market-analysis/score")
 def score_market(payload: MarketAnalysisPayload) -> dict[str, Any]:
     payload_dict = _model_to_dict(payload, exclude_none=True)
@@ -305,3 +456,12 @@ def recommend_specialists(payload: SpecialistRecommendationPayload) -> dict[str,
         "recommendations": [item.__dict__ for item in recommendations],
         "source": "request_specialists" if specialists is not None else "sample_csv",
     }
+
+
+@app.post("/api/v1/reports/generate-content")
+def generate_report(payload: ReportContentPayload) -> dict[str, Any]:
+    return generate_report_content(
+        project_data=payload.projectData,
+        analysis_result=payload.analysisResult,
+        include_business_plan=payload.includeBusinessPlan,
+    )

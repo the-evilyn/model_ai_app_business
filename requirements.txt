@@ -14,3 +14,4 @@ python-dotenv>=1.0.0
 pymongo>=4.0.0
 flask
 pytest
+shap>=0.44.0

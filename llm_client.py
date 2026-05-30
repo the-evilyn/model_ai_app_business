@@ -1,15 +1,11 @@
 """
 llm_client.py
-─────────────
-External LLM client supporting OpenAI, Gemini, Mistral, Claude, and OpenRouter APIs.
+-------------
+NVIDIA-only LLM client for the NexusAI Business Chatbot, analysis
+interpretation, and report content generation.
 
-Uses HTTP requests directly (no vendor SDK required) so that only `requests`
-is needed as a dependency.  Falls back to structured template responses when
-no API key is configured.
-
-IMPORTANT:
-- Does NOT use Ollama or any local LLM.
-- All calls go to external cloud APIs.
+Secrets are read from environment variables through chatbot_config.py.
+The API key is never logged or returned.
 """
 
 from __future__ import annotations
@@ -21,35 +17,38 @@ from typing import Any
 import requests
 
 from chatbot_config import (
-    CLAUDE_API_KEY,
-    GEMINI_API_KEY,
     LLM_MAX_TOKENS,
-    LLM_PROVIDER,
+    LLM_REASONING_BUDGET,
+    LLM_STREAM,
     LLM_TEMPERATURE,
     LLM_TIMEOUT_SECONDS,
-    MISTRAL_API_KEY,
-    OPENAI_API_KEY,
-    OPENROUTER_API_KEY,
-    OPENROUTER_BASE_URL,
-    get_effective_model,
+    LLM_TOP_P,
+    NVIDIA_API_KEY,
+    NVIDIA_BASE_URL,
+    NVIDIA_MODEL,
     is_llm_configured,
 )
 
 logger = logging.getLogger(__name__)
 
-# ═══════════════════════════════════════════════════════════════════════════ #
-#                         PUBLIC API                                        #
-# ═══════════════════════════════════════════════════════════════════════════ #
 
 
+def _clean_model_content(text: str) -> str:
+    """Keep only final user-visible content from NVIDIA responses."""
+    cleaned = (text or "").strip()
+    cleaned = re.sub(r"(?is)<think>.*?</think>", "", cleaned).strip()
+    cleaned = re.sub(r"(?is)<reasoning>.*?</reasoning>", "", cleaned).strip()
+    cleaned = re.sub(r"(?is)^\s*(reasoning|thinking|analysis)\s*:\s*.*?(final answer\s*:|answer\s*:)", "", cleaned).strip()
+    cleaned = re.sub(r"(?im)^\s*(we need to|i need to|must use only|internal|system prompt|project context|api results|retrieved knowledge).*$", "", cleaned).strip()
+    cleaned = re.sub(r"(?m)^\s*[\d\s.,-]{8,}\s*$", "", cleaned).strip()
+    cleaned = cleaned.replace("Final answer:", "").replace("Answer:", "").strip()
+    return cleaned
 def get_llm_provider() -> dict[str, Any]:
-    """Return a dictionary describing the current LLM provider status."""
-    provider = LLM_PROVIDER
-    model = get_effective_model(provider)
+    """Return the current NVIDIA LLM status without exposing secrets."""
     configured = is_llm_configured()
     return {
-        "provider": provider,
-        "model": model,
+        "provider": "nvidia",
+        "model": NVIDIA_MODEL,
         "configured": configured,
         "fallback_mode": not configured,
     }
@@ -61,200 +60,43 @@ def generate_llm_response(
     context: str = "",
     messages_history: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Send a prompt to the configured LLM provider and return the response.
-
-    Returns
-    -------
-    dict with keys:
-        - response_text: str   — the generated text
-        - provider: str        — which provider was used
-        - model: str           — which model was used
-        - fallback_mode: bool  — whether a fallback was used
-        - error: str | None    — error message if any
-    """
+    """Generate text with NVIDIA, or return a structured fallback."""
     if not is_llm_configured():
         return _fallback_response(system_prompt, user_message, context)
 
-    provider = LLM_PROVIDER
     try:
-        if provider == "openai":
-            return _call_openai(system_prompt, user_message, context)
-        elif provider == "gemini":
-            return _call_gemini(system_prompt, user_message, context)
-        elif provider == "mistral":
-            return _call_mistral(system_prompt, user_message, context)
-        elif provider == "claude":
-            return _call_claude(system_prompt, user_message, context)
-        elif provider == "openrouter":
-            return _call_openrouter(system_prompt, user_message, context, messages_history)
-        else:
-            logger.warning("Unknown LLM provider '%s', using fallback.", provider)
-            return _fallback_response(system_prompt, user_message, context)
+        return _call_nvidia(system_prompt, user_message, context, messages_history)
     except Exception as exc:
-        logger.error("LLM call failed for provider '%s': %s", provider, exc)
+        logger.error("NVIDIA LLM call failed: %s", exc)
         result = _fallback_response(system_prompt, user_message, context)
-        result["error"] = f"LLM call failed: {exc}"
+        result["error"] = f"NVIDIA LLM call failed: {exc}"
         return result
 
 
-# ═══════════════════════════════════════════════════════════════════════════ #
-#                       PROVIDER IMPLEMENTATIONS                            #
-# ═══════════════════════════════════════════════════════════════════════════ #
+def generate_json_response(
+    system_prompt: str,
+    user_message: str,
+    context: str = "",
+) -> dict[str, Any]:
+    """Generate a response expected to be JSON and parse it safely."""
+    result = generate_llm_response(system_prompt, user_message, context)
+    result["json"] = _parse_json_object(result.get("response_text", ""))
+    return result
 
 
-def _call_openai(system_prompt: str, user_message: str, context: str) -> dict[str, Any]:
-    """Call the OpenAI Chat Completions API."""
-    model = get_effective_model("openai")
-    url = "https://api.openai.com/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {OPENAI_API_KEY}",
-        "Content-Type": "application/json",
-    }
-
-    messages = [{"role": "system", "content": system_prompt}]
-    if context:
-        messages.append({"role": "system", "content": f"Additional context:\n{context}"})
-    messages.append({"role": "user", "content": user_message})
-
-    payload = {
-        "model": model,
-        "messages": messages,
-        "temperature": LLM_TEMPERATURE,
-        "max_tokens": LLM_MAX_TOKENS,
-    }
-
-    resp = requests.post(url, headers=headers, json=payload, timeout=LLM_TIMEOUT_SECONDS)
-    resp.raise_for_status()
-    data = resp.json()
-
-    return {
-        "response_text": data["choices"][0]["message"]["content"],
-        "provider": "openai",
-        "model": model,
-        "fallback_mode": False,
-        "error": None,
-    }
-
-
-def _call_gemini(system_prompt: str, user_message: str, context: str) -> dict[str, Any]:
-    """Call the Google Gemini (Generative Language) API."""
-    model = get_effective_model("gemini")
-    url = (
-        f"https://generativelanguage.googleapis.com/v1beta/models/{model}"
-        f":generateContent?key={GEMINI_API_KEY}"
-    )
-    headers = {"Content-Type": "application/json"}
-
-    combined_prompt = f"{system_prompt}\n\nContext:\n{context}\n\nUser question:\n{user_message}"
-
-    payload = {
-        "contents": [{"parts": [{"text": combined_prompt}]}],
-        "generationConfig": {
-            "temperature": LLM_TEMPERATURE,
-            "maxOutputTokens": LLM_MAX_TOKENS,
-        },
-    }
-
-    resp = requests.post(url, headers=headers, json=payload, timeout=LLM_TIMEOUT_SECONDS)
-    resp.raise_for_status()
-    data = resp.json()
-
-    text = data["candidates"][0]["content"]["parts"][0]["text"]
-    return {
-        "response_text": text,
-        "provider": "gemini",
-        "model": model,
-        "fallback_mode": False,
-        "error": None,
-    }
-
-
-def _call_mistral(system_prompt: str, user_message: str, context: str) -> dict[str, Any]:
-    """Call the Mistral AI Chat API."""
-    model = get_effective_model("mistral")
-    url = "https://api.mistral.ai/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {MISTRAL_API_KEY}",
-        "Content-Type": "application/json",
-    }
-
-    messages = [{"role": "system", "content": system_prompt}]
-    if context:
-        messages.append({"role": "system", "content": f"Additional context:\n{context}"})
-    messages.append({"role": "user", "content": user_message})
-
-    payload = {
-        "model": model,
-        "messages": messages,
-        "temperature": LLM_TEMPERATURE,
-        "max_tokens": LLM_MAX_TOKENS,
-    }
-
-    resp = requests.post(url, headers=headers, json=payload, timeout=LLM_TIMEOUT_SECONDS)
-    resp.raise_for_status()
-    data = resp.json()
-
-    return {
-        "response_text": data["choices"][0]["message"]["content"],
-        "provider": "mistral",
-        "model": model,
-        "fallback_mode": False,
-        "error": None,
-    }
-
-
-def _call_claude(system_prompt: str, user_message: str, context: str) -> dict[str, Any]:
-    """Call the Anthropic Messages API (Claude)."""
-    model = get_effective_model("claude")
-    url = "https://api.anthropic.com/v1/messages"
-    headers = {
-        "x-api-key": CLAUDE_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "Content-Type": "application/json",
-    }
-
-    user_content = user_message
-    if context:
-        user_content = f"Context:\n{context}\n\nQuestion:\n{user_message}"
-
-    payload = {
-        "model": model,
-        "system": system_prompt,
-        "messages": [{"role": "user", "content": user_content}],
-        "temperature": LLM_TEMPERATURE,
-        "max_tokens": LLM_MAX_TOKENS,
-    }
-
-    resp = requests.post(url, headers=headers, json=payload, timeout=LLM_TIMEOUT_SECONDS)
-    resp.raise_for_status()
-    data = resp.json()
-
-    text_parts = [block["text"] for block in data["content"] if block.get("type") == "text"]
-    return {
-        "response_text": "\n".join(text_parts),
-        "provider": "claude",
-        "model": model,
-        "fallback_mode": False,
-        "error": None,
-    }
-
-
-def _call_openrouter(
+def _call_nvidia(
     system_prompt: str,
     user_message: str,
     context: str,
     messages_history: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Call the OpenRouter API (OpenAI-compatible at openrouter.ai)."""
-    model = get_effective_model("openrouter")
-    url = f"{OPENROUTER_BASE_URL}/chat/completions"
+    """Call NVIDIA NIM through its OpenAI-compatible Chat Completions format."""
+    url = f"{NVIDIA_BASE_URL.rstrip('/')}/chat/completions"
     headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Authorization": f"Bearer {NVIDIA_API_KEY}",
         "Content-Type": "application/json",
     }
 
-    # If messages_history is provided, use it directly (it should contain system prompt too if needed)
-    # Otherwise construct it
     if messages_history:
         messages = messages_history
     else:
@@ -264,66 +106,122 @@ def _call_openrouter(
         messages.append({"role": "user", "content": user_message})
 
     payload = {
-        "model": model,
+        "model": NVIDIA_MODEL,
         "messages": messages,
         "temperature": LLM_TEMPERATURE,
+        "top_p": LLM_TOP_P,
         "max_tokens": LLM_MAX_TOKENS,
-        "reasoning": {"enabled": True}
+        "stream": LLM_STREAM,
     }
 
-    resp = requests.post(url, headers=headers, json=payload, timeout=LLM_TIMEOUT_SECONDS)
-    resp.raise_for_status()
-    data = resp.json()
+    if "deepseek" in NVIDIA_MODEL.lower():
+        payload["chat_template_kwargs"] = {"thinking": False}
+    elif "nemotron-3-nano" in NVIDIA_MODEL.lower():
+        payload["chat_template_kwargs"] = {"enable_thinking": True}
+        if LLM_REASONING_BUDGET > 0:
+            payload["reasoning_budget"] = LLM_REASONING_BUDGET
 
-    message_obj = data["choices"][0]["message"]
+    response = requests.post(
+        url,
+        headers=headers,
+        json=payload,
+        stream=LLM_STREAM,
+        timeout=LLM_TIMEOUT_SECONDS,
+    )
+    response.raise_for_status()
+    response_text, reasoning_details = (
+        (_read_streaming_response(response), None)
+        if LLM_STREAM
+        else _read_json_response(response)
+    )
+
     return {
-        "response_text": message_obj["content"],
-        "provider": "openrouter",
-        "model": model,
+        "response_text": response_text,
+        "provider": "nvidia",
+        "model": NVIDIA_MODEL,
         "fallback_mode": False,
         "error": None,
-        "reasoning_details": message_obj.get("reasoning_details"),
-        "reasoning": message_obj.get("reasoning")
+        "reasoning_details": reasoning_details,
     }
 
 
-# ═══════════════════════════════════════════════════════════════════════════ #
-#                       FALLBACK (NO LLM KEY)                               #
-# ═══════════════════════════════════════════════════════════════════════════ #
+def _read_json_response(response: requests.Response) -> tuple[str, str | None]:
+    data = response.json()
+    message = data["choices"][0]["message"]
+    content = message.get("content") or ""
+    reasoning = message.get("reasoning_content")
+    return _clean_model_content(content), reasoning
+
+
+def _read_streaming_response(response: requests.Response) -> str:
+    chunks: list[str] = []
+    for raw_line in response.iter_lines(decode_unicode=True):
+        if not raw_line:
+            continue
+        line = raw_line.strip()
+        if line.startswith("data:"):
+            line = line[5:].strip()
+        if line == "[DONE]":
+            break
+        try:
+            data = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        delta = data.get("choices", [{}])[0].get("delta", {})
+        content = delta.get("content")
+        if content:
+            chunks.append(content)
+    return _clean_model_content("".join(chunks))
+
+
+def _parse_json_object(text: str) -> dict[str, Any] | None:
+    if not text:
+        return None
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.strip("`").strip()
+        if cleaned.lower().startswith("json"):
+            cleaned = cleaned[4:].strip()
+    try:
+        data = json.loads(cleaned)
+        return data if isinstance(data, dict) else None
+    except json.JSONDecodeError:
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+        if start >= 0 and end > start:
+            try:
+                data = json.loads(cleaned[start : end + 1])
+                return data if isinstance(data, dict) else None
+            except json.JSONDecodeError:
+                return None
+    return None
 
 
 def _fallback_response(system_prompt: str, user_message: str, context: str) -> dict[str, Any]:
-    """Generate a structured template response when no LLM API key is available.
-
-    The response summarises the user question and the context provided so that
-    it is still useful — just not LLM-generated.
-    """
+    """Return a useful structured response when NVIDIA is unavailable."""
     response_parts = [
         "## AI Business Advisor Response (Template Mode)\n",
-        "**Note:** No LLM API key is configured. This is a structured template response ",
-        "based on the available API results and internal knowledge.\n",
+        "**Note:** NVIDIA LLM is not configured or unavailable. ",
+        "This response is generated from available API results and internal rules.\n",
         f"**Your question:** {user_message}\n",
     ]
 
     if context:
-        # Truncate context if too long for display
         ctx_preview = context[:2000] + ("..." if len(context) > 2000 else "")
         response_parts.append(f"\n**Available context:**\n{ctx_preview}\n")
 
     response_parts.append(
-        "\n**To get personalised AI-generated answers**, configure an LLM provider "
-        "in your `.env` file:\n"
+        "\nConfigure NVIDIA in `.env` for generated answers:\n"
+        "```env\n"
+        "NVIDIA_API_KEY=your_key_here\n"
+        "NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1\n"
+        "NVIDIA_MODEL=your_model_here\n"
         "```\n"
-        "LLM_PROVIDER=openai\n"
-        "OPENAI_API_KEY=your_key_here\n"
-        "LLM_MODEL=gpt-4o-mini\n"
-        "```\n"
-        "Supported providers: OpenAI, Gemini, Mistral, Claude, OpenRouter.\n"
     )
 
     return {
         "response_text": "".join(response_parts),
-        "provider": "none",
+        "provider": "nvidia",
         "model": "fallback_template",
         "fallback_mode": True,
         "error": None,

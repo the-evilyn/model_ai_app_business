@@ -13,7 +13,7 @@ The chatbot is **not** a generic assistant. It acts as:
 - **Pedagogical AI assistant** — explains scores and methodology
 - **AI module orchestrator** — calls existing FastAPI services automatically
 
-It understands user intent, calls the appropriate AI endpoints, retrieves knowledge from internal documents (RAG), and generates a comprehensive response via an external LLM or structured templates.
+It understands user intent, calls the appropriate AI endpoints, retrieves knowledge from internal documents (RAG), and generates a comprehensive response via NVIDIA or structured templates.
 
 ---
 
@@ -34,8 +34,8 @@ It understands user intent, calls the appropriate AI endpoints, retrieves knowle
          ▼               ▼               ▼
 ┌──────────────┐ ┌──────────────┐ ┌──────────────────┐
 │chatbot_engine│ │  rag_engine  │ │   llm_client     │
-│  (intent +   │ │  (TF-IDF /   │ │ (OpenAI/Gemini/  │
-│   API calls) │ │   keyword)   │ │  Mistral/Claude) │
+│  (intent +   │ │  (TF-IDF /   │ │  NVIDIA-only    │
+│   API calls) │ │   keyword)   │ │     NVIDIA       │
 └──────┬───────┘ └──────────────┘ └──────────────────┘
        │
        ▼ HTTP calls to existing APIs
@@ -60,7 +60,7 @@ It understands user intent, calls the appropriate AI endpoints, retrieves knowle
 |------|-------------|
 | `chatbot_config.py` | Central config — env vars, endpoints, intent keywords |
 | `chatbot_prompts.py` | System prompt + specialized prompts + fallback templates |
-| `llm_client.py` | External LLM client (OpenAI, Gemini, Mistral, Claude) |
+| `llm_client.py` | NVIDIA LLM client with structured fallback |
 | `rag_engine.py` | Simple RAG — TF-IDF retrieval from internal knowledge |
 | `chatbot_engine.py` | Core orchestration — intent → API → RAG → LLM → response |
 | `chatbot_memory.py` | Conversation memory (JSON file, MongoDB-compatible schema) |
@@ -74,39 +74,21 @@ It understands user intent, calls the appropriate AI endpoints, retrieves knowle
 
 ## ⚙️ Configuration (.env)
 
-Copy `.env.example` to `.env` and configure your LLM provider:
+Copy `.env.example` to `.env` and configure NVIDIA:
 
-### Option 1 — OpenAI
 ```env
-LLM_PROVIDER=openai
-OPENAI_API_KEY=sk-your-key-here
-LLM_MODEL=gpt-4o-mini
+NVIDIA_API_KEY=your_nvidia_api_key_here
+NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
+NVIDIA_MODEL=your_nvidia_model_here
+LLM_TEMPERATURE=0.3
+LLM_MAX_TOKENS=600
+LLM_TIMEOUT=120
 ```
 
-### Option 2 — Google Gemini
+### Fallback Mode
 ```env
-LLM_PROVIDER=gemini
-GEMINI_API_KEY=your-gemini-key
-LLM_MODEL=gemini-1.5-flash
-```
-
-### Option 3 — Mistral
-```env
-LLM_PROVIDER=mistral
-MISTRAL_API_KEY=your-mistral-key
-LLM_MODEL=mistral-small-latest
-```
-
-### Option 4 — Claude (Anthropic)
-```env
-LLM_PROVIDER=claude
-CLAUDE_API_KEY=your-claude-key
-LLM_MODEL=claude-sonnet-4-20250514
-```
-
-### Option 5 — No LLM (Fallback Mode)
-```env
-LLM_PROVIDER=none
+NVIDIA_API_KEY=
+NVIDIA_MODEL=
 ```
 The chatbot will use structured template responses based on API results.
 
@@ -190,7 +172,7 @@ streamlit run chatbot_streamlit_app.py
     { "title": "Business Validation Score", "source_type": "faq", "relevance_score": 0.42 }
   ],
   "recommendations": ["Focus on improving your weakest dimension score."],
-  "sources_used": ["API: business_validation", "RAG: Business Validation Score", "LLM: openai"],
+  "sources_used": ["API: business_validation", "RAG: Business Validation Score", "LLM: nvidia"],
   "memory_saved": {},
   "fallback_mode": false
 }
@@ -225,7 +207,7 @@ Returns API health status.
 
 ## ⚡ Fallback Mode
 
-When **no LLM API key** is configured (`LLM_PROVIDER=none` or empty keys):
+When NVIDIA is not configured (`NVIDIA_API_KEY` or `NVIDIA_MODEL` is empty):
 
 - The chatbot still works fully — it detects intent, calls APIs, retrieves RAG context.
 - Instead of LLM-generated prose, it returns **structured template responses** filled with API data.

@@ -83,10 +83,19 @@
   {
     "id": "doc_010",
     "title": "API Integration Guide",
-    "content": "The NexusAI API provides the following REST endpoints for integration with Spring Boot, Angular, or any HTTP client:\n\nGET /health — Check API health status and version.\nGET /api/v1/models/status — Check which ML models are loaded and their status.\nPOST /api/v1/startup-success/predict — Predict startup success probability. Input: sector, funding_rounds, founder_experience_years, team_size, market_size_billion, product_traction_users, burn_rate_million, revenue_million, investor_type, founder_background.\nPOST /api/v1/sentiment/analyze — Analyze text sentiment. Input: texts (list of strings).\nPOST /api/v1/market-analysis/score — Score market potential. Input: sector, country, market_size_billion, market_growth_rate_percent, competition_level, use_world_bank.\nPOST /api/v1/specialists/recommend — Get specialist recommendations. Input: title, description, sector, needs, budget_per_hour.\nPOST /api/v1/business-validation/score — Get comprehensive business validation. Input: all project data fields.\n\nThe main API runs on port 8001. The chatbot API runs on port 8002. Both support CORS for cross-origin requests. All endpoints accept and return JSON.",
+    "content": "The NexusAI API provides REST endpoints for integration through Spring Boot. Angular should call Spring Boot, and Spring Boot should call FastAPI. GET /health checks API health. GET /api/v1/models/status checks which ML models are loaded. POST /api/v1/startup-success/predict predicts startup success probability. POST /api/v1/sentiment/analyze analyzes a list of feedback texts. POST /api/v1/market-analysis/score scores market potential. POST /api/v1/specialists/recommend returns specialist recommendations. POST /api/v1/business-validation/score returns the composite validation score. POST /api/v1/business-validation/analyze returns the full project analysis with scores, startup prediction, SHAP or fallback explanation, strengths, weaknesses, recommendations, generated needs, warnings and recommended specialists. POST /api/v1/reports/generate-content generates text content for the report. The main AI API runs locally on http://127.0.0.1:8004. The chatbot API runs locally on http://127.0.0.1:8003. Both support CORS and return JSON.",
     "source_type": "documentation",
     "metadata": {
       "module": "api"
+    }
+  },
+  {
+    "id": "doc_011",
+    "title": "Reports and Short Business Plan — Content Generation",
+    "content": "The report generation module creates textual report content after the business analysis has already calculated all scores. NVIDIA is used only to generate or polish narrative text such as the executive summary, analysis summary, recommendations, short business plan and short marketing strategy. NVIDIA must never modify finalScore, startupSuccessScore, marketAnalysisScore, marketOpinionScore, SHAP factors, generated needs or specialist recommendation scores. The PDF file itself is generated later by Spring Boot. A complete report should include: title, executive summary, scores, analysis, strengths, weaknesses, recommendations, warnings, recommended specialists when available, a short business plan, and a short marketing strategy. If information is missing, the report should state the limitation instead of inventing data.",
+    "source_type": "documentation",
+    "metadata": {
+      "module": "reports"
     }
   }
 ]

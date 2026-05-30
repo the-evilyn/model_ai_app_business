@@ -4,7 +4,7 @@ chatbot_api.py
 FastAPI application for the NexusAI Business Chatbot.
 
 Run with:
-    uvicorn chatbot_api:app --reload --port 8002
+    uvicorn chatbot_api:app --reload --port 8003
 """
 
 from __future__ import annotations
@@ -19,12 +19,7 @@ from pydantic import BaseModel, Field
 from chatbot_config import (
     CHATBOT_API_PORT,
     FASTAPI_BASE_URL,
-    LLM_MODEL,
-    LLM_PROVIDER,
     RAG_ENABLED,
-    get_effective_model,
-    is_fallback_mode,
-    is_llm_configured,
 )
 from chatbot_engine import handle_chat_message
 from llm_client import get_llm_provider

@@ -13,6 +13,7 @@ ENV/
 !.env.example
 *.log
 logs/
+run_logs/
 .cache/
 .pytest_cache/
 .mypy_cache/
@@ -20,6 +21,10 @@ logs/
 Thumbs.db
 *.sqlite3
 *.db
+data/chat_memory.json
+data/*memory*.json
+*.secret
+*.key
 *.tmp
 *.bak
 
@@ -34,3 +39,12 @@ experiments/
 
 # Large model artifacts
 artifacts/startup_success_binary_best_model.joblib
+
+.pydeps/
+data/chat_memory.json
+__pycache__/
+run_logs/
+.pydeps/
+data/chat_memory.json
+__pycache__/
+run_logs/

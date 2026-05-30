@@ -23,45 +23,30 @@ except ImportError:
 
 # ─────────────────────────────── API URLs ────────────────────────────────── #
 
-FASTAPI_BASE_URL: str = os.getenv("FASTAPI_BASE_URL", "http://127.0.0.1:8000")
-CHATBOT_API_PORT: int = int(os.getenv("CHATBOT_API_PORT", "8002"))
+FASTAPI_BASE_URL: str = os.getenv("FASTAPI_BASE_URL", "http://127.0.0.1:8004")
+CHATBOT_API_PORT: int = int(os.getenv("CHATBOT_API_PORT", "8003"))
 
-# ──────────────────────────── LLM Provider ───────────────────────────────── #
+# ──────────────────────────── NVIDIA LLM ─────────────────────────────────── #
 
-LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "none").lower()
-LLM_MODEL: str = os.getenv("LLM_MODEL", "")
-LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.7"))
-LLM_MAX_TOKENS: int = int(os.getenv("LLM_MAX_TOKENS", "2048"))
-
-# Provider-specific API keys
-OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-MISTRAL_API_KEY: str = os.getenv("MISTRAL_API_KEY", "")
-CLAUDE_API_KEY: str = os.getenv("CLAUDE_API_KEY", "")
-OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
-
-# OpenRouter settings (OpenAI-compatible API at a different base URL)
-OPENROUTER_BASE_URL: str = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
-
-# Default models per provider (used when LLM_MODEL is empty)
-DEFAULT_MODELS: dict[str, str] = {
-    "openai": "gpt-4o-mini",
-    "gemini": "gemini-1.5-flash",
-    "mistral": "mistral-small-latest",
-    "claude": "claude-sonnet-4-20250514",
-    "openrouter": "openai/gpt-4o-mini",
-}
+NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "")
+NVIDIA_BASE_URL: str = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
+NVIDIA_MODEL: str = os.getenv("NVIDIA_MODEL", "")
+LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.3"))
+LLM_TOP_P: float = float(os.getenv("LLM_TOP_P", "0.95"))
+LLM_MAX_TOKENS: int = int(os.getenv("LLM_MAX_TOKENS", "600"))
+LLM_STREAM: bool = os.getenv("LLM_STREAM", "true").lower() in ("true", "1", "yes")
+LLM_REASONING_BUDGET: int = int(os.getenv("LLM_REASONING_BUDGET", "0"))
 
 # ──────────────────────────── Timeouts ───────────────────────────────────── #
 
 API_TIMEOUT_SECONDS: int = int(os.getenv("API_TIMEOUT_SECONDS", "30"))
-LLM_TIMEOUT_SECONDS: int = int(os.getenv("LLM_TIMEOUT_SECONDS", "60"))
+LLM_TIMEOUT_SECONDS: int = int(os.getenv("LLM_TIMEOUT", os.getenv("LLM_TIMEOUT_SECONDS", "120")))
 
 # ──────────────────────────── RAG Settings ───────────────────────────────── #
 
 RAG_ENABLED: bool = os.getenv("RAG_ENABLED", "true").lower() in ("true", "1", "yes")
 RAG_TOP_K: int = int(os.getenv("RAG_TOP_K", "2"))
-CHATBOT_FAST_MODE: bool = os.getenv("CHATBOT_FAST_MODE", "false").lower() == "true"
+CHATBOT_FAST_MODE: bool = os.getenv("CHATBOT_FAST_MODE", "true").lower() == "true"
 KNOWLEDGE_DOCS_PATH: str = os.getenv(
     "KNOWLEDGE_DOCS_PATH",
     str(Path(__file__).resolve().parent / "data" / "knowledge_documents.json"),
@@ -146,30 +131,9 @@ INTENT_KEYWORDS: dict[str, list[str]] = {
 # ──────────────────────────── Helpers ────────────────────────────────────── #
 
 
-def get_api_key_for_provider(provider: str) -> str:
-    """Return the API key configured for the given provider."""
-    mapping = {
-        "openai": OPENAI_API_KEY,
-        "gemini": GEMINI_API_KEY,
-        "mistral": MISTRAL_API_KEY,
-        "claude": CLAUDE_API_KEY,
-        "openrouter": OPENROUTER_API_KEY,
-    }
-    return mapping.get(provider, "")
-
-
-def get_effective_model(provider: str) -> str:
-    """Return the model name to use, falling back to provider defaults."""
-    if LLM_MODEL:
-        return LLM_MODEL
-    return DEFAULT_MODELS.get(provider, "")
-
-
 def is_llm_configured() -> bool:
-    """Return True when a valid provider + key pair is present."""
-    if LLM_PROVIDER in ("none", ""):
-        return False
-    return bool(get_api_key_for_provider(LLM_PROVIDER))
+    """Return True when NVIDIA has the required runtime configuration."""
+    return bool(NVIDIA_API_KEY and NVIDIA_BASE_URL and NVIDIA_MODEL)
 
 
 def is_fallback_mode() -> bool:
