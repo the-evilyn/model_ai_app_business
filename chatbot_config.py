@@ -77,6 +77,16 @@ ENDPOINTS: dict[str, str] = {
 # ────────────────── Intent Detection Keywords ────────────────────────────── #
 
 INTENT_KEYWORDS: dict[str, list[str]] = {
+    "project_question": [
+        "what do you think about my project", "what do you think about the project",
+        "what do you think about my idea", "is my project a good idea",
+        "is my idea good", "will it work in the market", "does it have market potential",
+        "does my project have market potential", "can my idea succeed",
+        "que penses-tu de mon projet", "que penses tu de mon projet",
+        "que penses-tu de mon idee", "que penses tu de mon idee",
+        "est-ce que mon idee peut reussir", "est ce que mon idee peut reussir",
+        "est-ce que mon projet a un potentiel", "est ce que mon projet a un potentiel",
+    ],
     "startup_analysis": [
         "startup", "predict success", "success probability", "startup idea",
         "analyze my startup", "startup score", "chance of success",
