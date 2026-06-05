@@ -5,23 +5,22 @@ pipeline {
         DOCKER_HUB_USER = 'marouamrouji'
         IMAGE_NAME      = 'ia-chatbot-app'
         IMAGE_TAG       = "1.0.${BUILD_NUMBER}"
-        REGISTRY_CRED   = 'docker-hub-credentials' // Ton ID de credentials Docker Hub dans Jenkins
+        REGISTRY_CRED   = 'docker-hub-credentials'
     }
 
     stages {
         stage('1. Checkout SCM') {
             steps {
-                cleanWs() // Nettoyage de l'espace de travail
+                cleanWs()
                 checkout scm
-                echo "✅ Code IA Chatbot récupéré avec succès"
+                echo "✅ Code IA Chatbot récupéré avec succès (SANS MAVEN)"
             }
         }
 
         stage('2. Analyse SonarQube') {
             steps {
                 withSonarQubeEnv('sonarqube') {
-                    echo "🦊 Exécution de SonarQube Scanner via Docker pour Python..."
-                    // On utilise le scanner en conteneur pour éviter les conflits de version de Node.js sur le serveur
+                    echo "🦊 Running SonarQube Scanner via Docker..."
                     sh """
                         docker run --rm \
                         -e SONAR_HOST_URL=\${SONAR_HOST_URL} \
@@ -39,21 +38,21 @@ pipeline {
 
         stage('3. Security Scan (Trivy fs)') {
             steps {
-                echo "🔍 Analyse de sécurité du code source avec Trivy..."
+                echo "🔍 Scanning Python filesystem with Trivy..."
                 sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v ${WORKSPACE}:/apps aquasec/trivy fs /apps --severity HIGH,CRITICAL --exit-code 0"
             }
         }
 
         stage('4. Build Docker Image') {
             steps {
-                echo "📦 Construction de l'image Docker Python (FastAPI)..."
+                echo "📦 Building IA Chatbot Docker Image..."
                 sh "docker build --no-cache -t ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} ."
             }
         }
 
         stage('5. Security Scan (Trivy Image)') {
             steps {
-                echo "🛡️ Analyse de l'image Docker finale..."
+                echo "🛡️ Scanning IA Docker Image with Trivy..."
                 sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} --severity CRITICAL --exit-code 0"
             }
         }
@@ -71,7 +70,7 @@ pipeline {
 
         stage('7. Deploy avec Ansible') {
             steps {
-                echo "🚀 Déploiement de l'application IA sur le serveur Azure..."
+                echo "🚀 Déploiement de l'application IA avec Ansible..."
                 sh "ssh -o StrictHostKeyChecking=no azureuser@74.161.163.110 'ansible-playbook -i ~/ansible/inventory.ini ~/ansible/deploy.yml --extra-vars \"image_tag=${IMAGE_TAG}\"'"
             }
         }
@@ -79,7 +78,7 @@ pipeline {
 
     post {
         always {
-            cleanWs() // Nettoyage automatique pour laisser le serveur propre
+            cleanWs()
         }
     }
 }
